@@ -1,6 +1,6 @@
 import { Pool, PoolClient } from 'pg'
 
-export async function tx<T>(
+export default async function tx<T>(
 	pg: Pool,
 	callback: (db: PoolClient) => Promise<T>
 ): Promise<T> {
