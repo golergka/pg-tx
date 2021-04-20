@@ -1,5 +1,5 @@
 {
-  "name": "pg-ts",
+  "name": "pg-tx",
   "version": "0.1.0",
   "description": "Transaction wrapper for node-postgres",
   "main": ".build/index.js",
@@ -29,7 +29,7 @@
   "author": "Max Yankov <golergka@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/golergka/pg-ts"
+    "url": "https://github.com/golergka/pg-tx"
   },
   "license": "MIT",
   "devDependencies": {
