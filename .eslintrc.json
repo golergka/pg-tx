@@ -23,7 +23,7 @@
 				"plugin:import/warnings",
 				"plugin:import/typescript",
 				"plugin:node/recommended",
-				"prettier/@typescript-eslint",
+				"prettier",
 				"plugin:prettier/recommended",
 				"plugin:promise/recommended"
 		],
