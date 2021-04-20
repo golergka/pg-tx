@@ -1,0 +1,70 @@
+{
+		"root": true,
+		"parser": "@typescript-eslint/parser",
+		"env": { "node": true },
+		"parserOptions": {
+			"ecmaVersion": 2020,
+			"project": "tsconfig.json",
+			"sourceType": "module"
+		},
+		"plugins": [
+				"@typescript-eslint",
+				"jest",
+				"import",
+				"node",
+				"promise"
+		],
+		"extends": [
+				"eslint:recommended",
+				"plugin:@typescript-eslint/eslint-recommended",
+				"plugin:@typescript-eslint/recommended",
+				"plugin:jest/recommended",
+				"plugin:import/errors",
+				"plugin:import/warnings",
+				"plugin:import/typescript",
+				"plugin:node/recommended",
+				"prettier/@typescript-eslint",
+				"plugin:prettier/recommended",
+				"plugin:promise/recommended"
+		],
+		"ignorePatterns": [
+				"src/schema/resolvers/types.ts"
+		],
+		"settings": {
+			"node": {
+				"tryExtensions": [".js", ".json", ".node", ".ts"]
+			}
+		},
+		"rules": {
+			"node/no-unsupported-features/es-syntax": ["error", { "ignores": ["modules"] }],
+			"prefer-destructuring": ["warn"],
+			"no-await-in-loop": "warn",
+			"no-console": "warn",
+			"no-loss-of-precision": "warn",
+			"no-promise-executor-return": "error",
+			"no-unreachable-loop": "error",
+			"require-atomic-updates": "warn",
+			"array-callback-return": "warn",
+			"default-case-last": "warn",
+			"no-constructor-return": "warn",
+			"@typescript-eslint/no-unused-vars": [
+				"warn",
+				{
+					"argsIgnorePattern": "^_"
+				}
+			],
+			"jest/valid-expect": "off"
+		},
+		"overrides": [
+			{
+				"files": [
+					"**/*.test.ts",
+					"**/test_common.ts"
+				],
+				"rules": {
+					"@typescript-eslint/no-non-null-assertion": "off",
+					"@typescript-eslint/explicit-module-boundary-types": "off"
+				}
+			}
+		]
+}

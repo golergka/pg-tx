@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"target": "esnext",
+		"lib": [
+			"esnext"
+		],
+		"types": [
+			"jest",
+			"node"
+		],
+		"outDir": ".build",
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictBindCallApply": true,
+		"strictPropertyInitialization": true,
+		"skipLibCheck": true,
+		"declaration": true,
+		"sourceMap": true,
+		"noUncheckedIndexedAccess": true
+	},
+	"include": [
+		"src/**/*"
+	],
+}
