@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { tx } from '.'
+import tx from '.'
 
 describe(`tx`, () => {
 	let pg: Pool
