@@ -25,7 +25,7 @@ export class ProxyClient implements PoolClient {
 		}
 	}
 
-	public constructor(readonly client: PoolClient) {}
+	public constructor(private readonly client: PoolClient) {}
 
 	// EventEmitter implementation
 	addListener(
@@ -143,6 +143,7 @@ export class ProxyClient implements PoolClient {
 		callback: (err: Error, result: QueryResult<R>) => void
 	): void
 	query(param1: any, param2?: any, param3?: any): any {
+		// TODO check query texts to filter out transaction queries
 		this.releaseCheck()
 		return this.client.query(param1, param2, param3)
 	}
@@ -191,7 +192,12 @@ export class ProxyClient implements PoolClient {
 
 	release(err?: Error | boolean): void {
 		this.releaseCheck()
-		this.released = true
+		this.proxyRelease()
 		this.client.release(err)
+	}
+
+	proxyRelease() {
+		this.releaseCheck()
+		this.released = true
 	}
 }
