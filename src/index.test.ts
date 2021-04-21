@@ -65,23 +65,30 @@ describe(`tx`, () => {
 		expect(rowCount).toBe(0)
 	})
 
-	it(`doesn't commit changes on next tick after query error `, async () => {
-		let secondPromise
-		await expect(
-			tx(pg, async (db) => {
-				const errorQuery = db.query(`this query has an error`)
-				secondPromise = Promise.allSettled([errorQuery]).then(async () => {
-					await new Promise((resolve) => setImmediate(resolve))
-					await pg.query(`INSERT INTO things(thing) VALUES ('query_error_tick')`)
+	it(`doesn't commit changes on next tick after query error`, async () => {
+		let laterPromise
+		const txPromise = tx(pg, async (db) => {
+			laterPromise = (async () => {
+				try {
+					await txPromise
+				} catch (e) {
+					// ignore error, we just needed to wait until it completed
+				}
+				await new Promise((resolve) => {
+					setImmediate(resolve)
 				})
+				await db.query(`INSERT INTO things(thing) VALUES ('query_error_tick')`)
+			})()
+			await Promise.all([db.query(`this query has an error`), laterPromise])
+		})
 
-				await Promise.all([errorQuery, secondPromise])
-			})
-		).rejects.toThrowErrorMatchingInlineSnapshot(
+		await expect(txPromise).rejects.toThrowErrorMatchingInlineSnapshot(
 			`"syntax error at or near \\"this\\""`
 		)
 
-		await expect(secondPromise).rejects.toThrowErrorMatchingInlineSnapshot()
+		await expect(laterPromise).rejects.toThrowErrorMatchingInlineSnapshot(
+			`"client already released"`
+		)
 
 		const { rowCount } = await pg.query(
 			`SELECT id, thing FROM things WHERE thing = 'query_error_tick'`
