@@ -64,4 +64,28 @@ describe(`tx`, () => {
 		)
 		expect(rowCount).toBe(0)
 	})
+
+	it(`doesn't commit changes on next tick after query error `, async () => {
+		let secondPromise
+		await expect(
+			tx(pg, async (db) => {
+				const errorQuery = db.query(`this query has an error`)
+				secondPromise = Promise.allSettled([errorQuery]).then(async () => {
+					await new Promise((resolve) => setImmediate(resolve))
+					await pg.query(`INSERT INTO things(thing) VALUES ('query_error_tick')`)
+				})
+
+				await Promise.all([errorQuery, secondPromise])
+			})
+		).rejects.toThrowErrorMatchingInlineSnapshot(
+			`"syntax error at or near \\"this\\""`
+		)
+
+		await expect(secondPromise).rejects.toThrowErrorMatchingInlineSnapshot()
+
+		const { rowCount } = await pg.query(
+			`SELECT id, thing FROM things WHERE thing = 'query_error_tick'`
+		)
+		expect(rowCount).toBe(0)
+	})
 })
