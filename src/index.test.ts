@@ -35,6 +35,17 @@ describe(`tx`, () => {
 		expect(committed.thing).toEqual('comitted')
 	})
 
+	it(`doesn't commit changes with forcedRollback`, async () => {
+		await tx(pg, async (db) => {
+			db.query(`INSERT INTO things (thing) VALUES ('comitted')`)
+		})
+
+		const { rowCount } = await pg.query(
+			`SELECT id, thing FROM things WHERE thing = 'node_error'`
+		)
+		expect(rowCount).toBe(0)
+	})
+
 	it(`doesn't commit changes when there's a Node exception`, async () => {
 		await expect(
 			tx(pg, async (db) => {
