@@ -21,7 +21,9 @@ export class ProxyClient implements PoolClient {
 
 	private releaseCheck() {
 		if (this.released) {
-			throw new Error(`Transaction client already released, see more: https://tinyurl.com/py2upfcw`)
+			throw new Error(
+				`Transaction client already released, see more: https://tinyurl.com/py2upfcw`
+			)
 		}
 	}
 

@@ -5,7 +5,7 @@ describe(`tx`, () => {
 	describe('with Pool client', () => {
 		let pg: Pool
 
-		beforeAll(async () => {
+		beforeEach(async () => {
 			const { POSTGRES_URL } = process.env
 
 			if (!POSTGRES_URL) {
@@ -19,32 +19,36 @@ describe(`tx`, () => {
 				thing TEXT NOT NULL
 			)`)
 		})
-		afterAll(async () => {
+		afterEach(async () => {
 			await pg.query(`DROP TABLE THINGS`)
 			await pg.end()
 		})
 
 		it(`commits changes when there's no error`, async () => {
 			await tx(pg, async (db) => {
-				db.query(`INSERT INTO things (thing) VALUES ('comitted')`)
+				db.query(`INSERT INTO things (thing) VALUES ('committed')`)
 			})
 
 			const {
 				rows: [committed]
 			} = await pg.query(
-				`SELECT id, thing FROM things WHERE thing = 'comitted'`
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
 			)
 			expect(committed).toBeDefined()
-			expect(committed.thing).toEqual('comitted')
+			expect(committed.thing).toEqual('committed')
 		})
 
 		it(`doesn't commit changes with forcedRollback`, async () => {
-			await tx(pg, async (db) => {
-				db.query(`INSERT INTO things (thing) VALUES ('comitted')`)
-			})
+			await tx(
+				pg,
+				async (db) => {
+					await db.query(`INSERT INTO things (thing) VALUES ('committed')`)
+				},
+				true
+			)
 
 			const { rowCount } = await pg.query(
-				`SELECT id, thing FROM things WHERE thing = 'node_error'`
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
 			)
 			expect(rowCount).toBe(0)
 		})
@@ -111,13 +115,39 @@ describe(`tx`, () => {
 			)
 			expect(rowCount).toBe(0)
 		})
+
+		it(`handles nested transactions`, async () => {
+			await tx(pg, async (rootDb) => {
+				await tx(rootDb, async (comittedDb) => {
+					await comittedDb.query(
+						`INSERT INTO things (thing) VALUES ('committed')`
+					)
+				})
+				await expect(
+					tx(rootDb, async (rolledbackDb) => {
+						await rolledbackDb.query(
+							`INSERT INTO things (thing) VALUES ('rolledback')`
+						)
+						throw new Error(`rollback this block`)
+					})
+				).rejects.toThrowError(`rollback this block`)
+			})
+			const { rowCount: comittedCount } = await pg.query(
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
+			)
+			expect(comittedCount).toBe(1)
+			const { rowCount: rolledbackCount } = await pg.query(
+				`SELECT id, thing FROM things WHERE thing = 'rolledback'`
+			)
+			expect(rolledbackCount).toBe(0)
+		})
 	})
 
 	describe('with PoolClient client', () => {
 		let pool: Pool
 		let pg: PoolClient
 
-		beforeAll(async () => {
+		beforeEach(async () => {
 			const { POSTGRES_URL } = process.env
 
 			if (!POSTGRES_URL) {
@@ -132,7 +162,7 @@ describe(`tx`, () => {
 				thing TEXT NOT NULL
 			)`)
 		})
-		afterAll(async () => {
+		afterEach(async () => {
 			await pg.query(`DROP TABLE THINGS`)
 			await pg.release()
 			await pool.end()
@@ -140,25 +170,29 @@ describe(`tx`, () => {
 
 		it(`commits changes when there's no error`, async () => {
 			await tx(pg, async (db) => {
-				db.query(`INSERT INTO things (thing) VALUES ('comitted')`)
+				await db.query(`INSERT INTO things (thing) VALUES ('committed')`)
 			})
 
 			const {
 				rows: [committed]
 			} = await pg.query(
-				`SELECT id, thing FROM things WHERE thing = 'comitted'`
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
 			)
 			expect(committed).toBeDefined()
-			expect(committed.thing).toEqual('comitted')
+			expect(committed.thing).toEqual('committed')
 		})
 
 		it(`doesn't commit changes with forcedRollback`, async () => {
-			await tx(pg, async (db) => {
-				db.query(`INSERT INTO things (thing) VALUES ('comitted')`)
-			})
+			await tx(
+				pg,
+				async (db) => {
+					db.query(`INSERT INTO things (thing) VALUES ('committed')`)
+				},
+				true
+			)
 
 			const { rowCount } = await pg.query(
-				`SELECT id, thing FROM things WHERE thing = 'node_error'`
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
 			)
 			expect(rowCount).toBe(0)
 		})
@@ -224,6 +258,48 @@ describe(`tx`, () => {
 				`SELECT id, thing FROM things WHERE thing = 'query_error_tick'`
 			)
 			expect(rowCount).toBe(0)
+		})
+
+		it(`doesnt't start a transaction if client is already in a transaction`, async () => {
+			await pg.query(`BEGIN`)
+			await tx(pg, async (db) => {
+				await db.query(`INSERT INTO things (thing) VALUES ('committed')`)
+			})
+			const { rowCount: beforeRollbackCount } = await pg.query(
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
+			)
+			expect(beforeRollbackCount).toBe(1)
+			await pg.query(`ROLLBACK`)
+			const { rowCount: afterRollbackCount } = await pg.query(
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
+			)
+			expect(afterRollbackCount).toBe(0)
+		})
+
+		it(`handles nested transactions`, async () => {
+			await tx(pg, async (rootDb) => {
+				await tx(rootDb, async (comittedDb) => {
+					await comittedDb.query(
+						`INSERT INTO things (thing) VALUES ('committed')`
+					)
+				})
+				await expect(
+					tx(rootDb, async (rolledbackDb) => {
+						await rolledbackDb.query(
+							`INSERT INTO things (thing) VALUES ('rolledback')`
+						)
+						throw new Error(`rollback this block`)
+					})
+				).rejects.toThrowError(`rollback this block`)
+			})
+			const { rowCount: comittedCount } = await pg.query(
+				`SELECT id, thing FROM things WHERE thing = 'committed'`
+			)
+			expect(comittedCount).toBe(1)
+			const { rowCount: rolledbackCount } = await pg.query(
+				`SELECT id, thing FROM things WHERE thing = 'rolledback'`
+			)
+			expect(rolledbackCount).toBe(0)
 		})
 	})
 })
