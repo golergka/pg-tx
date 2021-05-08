@@ -4,15 +4,23 @@ import { ProxyClient } from './proxy_client'
 /**
  * @param pg node postgres pool
  * @param callback callback that will use provided transaction client
- * @param forceRollback force rollback even without errors - useful for integration tests
+ * @param forceRollback force rollback even without errors - useful for tests
  * @returns
  */
 export default async function tx<T>(
-	pg: Pool,
+	pg: Pool|PoolClient,
 	callback: (db: PoolClient) => Promise<T>,
 	forceRollback?: boolean
 ): Promise<T> {
-	const client = await pg.connect()
+	let connected
+	let client: PoolClient  
+	if (pg instanceof Pool) {
+		client = await pg.connect()
+		connected = true
+	} else {
+		client = pg
+		connected = false
+	}
 	const proxyClient = new ProxyClient(client)
 	await proxyClient.query(`BEGIN`)
 
@@ -26,6 +34,8 @@ export default async function tx<T>(
 		await client.query(`ROLLBACK`)
 		throw e
 	} finally {
-		client.release()
+		if (connected) {
+			client.release()
+		}
 	}
 }

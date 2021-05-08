@@ -21,7 +21,7 @@ export class ProxyClient implements PoolClient {
 
 	private releaseCheck() {
 		if (this.released) {
-			throw new Error(`client already released`)
+			throw new Error(`Transaction client already released. Did you forget to await on something?`)
 		}
 	}
 
