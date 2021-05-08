@@ -1,6 +1,6 @@
 {
   "name": "pg-tx",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Transaction wrapper for node-postgres",
   "main": ".build/index.js",
   "types": ".build/index.d.ts",
