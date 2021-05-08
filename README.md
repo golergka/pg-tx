@@ -1,8 +1,8 @@
-# pg-tx
+# pg-tx - Transactions for node-postgres
 
 [![npm version](https://badge.fury.io/js/pg-tx.svg)](https://badge.fury.io/js/pg-tx)
 
-This package provides a minimalistic way to implement transactions on top of [node-postgres](http://node-postgres.com), based on [this answer](https://stackoverflow.com/a/65588782/312725), but improved to remove a class of subtle bugs.
+This package implements transactions on top of [node-postgres](http://node-postgres.com), based on [this answer](https://stackoverflow.com/a/65588782/312725), but improved to remove a class of subtle bugs.
 
 ## Usage
 
@@ -10,10 +10,34 @@ This package provides a minimalistic way to implement transactions on top of [no
 import tx from `pg-tx`
 
 const pg = new Pool()
+
 await tx(pg, async (db) => {
-  db.query(`UPDATE accounts SET money = money - 50 WHERE name = 'bob'`)
-  db.query(`UPDATE accounts SET money = money + 50 WHERE name = 'alice'`)
+  await db.query(`UPDATE accounts SET money = money - 50 WHERE name = 'bob'`)
+  await db.query(`UPDATE accounts SET money = money + 50 WHERE name = 'alice'`)
 })
+
+await tx(pg, async (db) => {
+  await db.query(`UPDATE accounts SET money = money - 50 WHERE name = 'bob'`)
+  await db.query(`UPDATE accounts SET money = money + 50 WHERE name = 'debbie'`)
+
+  // Any errors thrown inside the callback will terminate the transaction
+  throw new Error(`screw Debbie`)
+})
+
+// You can also use it with other packages that use Pool or PoolClient, like pgtyped
+import { sql } from '@pgtyped/query'
+
+const updateAccount = sql<IUpdateAccountQuery>`
+  UPDATE accounts
+  SET money = momey + $delta
+  WHERE name = $name
+`
+
+await tx(pg, async(db) => {
+  await udpateAccount.run({ name: 'bob', delta: -50 })
+  await udpateAccount.run({ name: 'charlie', delta: 50 })
+})
+
 ```
 
 ## Why use this package
@@ -21,6 +45,7 @@ await tx(pg, async (db) => {
 Naive approach to pg transactions, featured in [this answer](https://stackoverflow.com/a/65588782/312725) and used in many projects looks like this:
 
 ```Typescript
+// DO NOT USE THIS CODE
 export default async function tx<T>(
 	pg: Pool,
 	callback: (db: PoolClient) => Promise<T>
