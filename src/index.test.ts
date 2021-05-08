@@ -103,7 +103,7 @@ describe(`tx`, () => {
 			)
 
 			await expect(laterPromise).rejects.toThrowErrorMatchingInlineSnapshot(
-				`"Transaction client already released. Did you forget to await on something?"`
+				`"Transaction client already released, see more: https://tinyurl.com/py2upfcw"`
 			)
 
 			const { rowCount } = await pg.query(
@@ -217,7 +217,7 @@ describe(`tx`, () => {
 			)
 
 			await expect(laterPromise).rejects.toThrowErrorMatchingInlineSnapshot(
-				`"Transaction client already released. Did you forget to await on something?"`
+				`"Transaction client already released, see more: https://tinyurl.com/py2upfcw"`
 			)
 
 			const { rowCount } = await pg.query(
