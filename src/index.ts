@@ -1,11 +1,16 @@
-import { Pool, PoolClient } from 'pg'
+import { ClientBase, Pool, PoolClient } from 'pg'
 import { ProxyClient } from './proxy_client'
 
-async function getTxId(client: PoolClient) {
+async function getTxId(client: ClientBase) {
 	const {
 		rows: [{ txid }]
 	} = await client.query(`SELECT txid_current() AS "txid"`)
 	return txid
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isPoolClient(p: any): p is PoolClient {
+	return typeof p['release'] === 'function'
 }
 
 /**
@@ -21,12 +26,12 @@ export default async function tx<T>(
 ): Promise<T> {
 	let connected
 	let client: PoolClient
-	if (pg instanceof Pool) {
-		client = await pg.connect()
-		connected = true
-	} else {
+	if (isPoolClient(pg)) {
 		client = pg
 		connected = false
+	} else {
+		client = await pg.connect()
+		connected = true
 	}
 
 	const proxyClient = new ProxyClient(client)
