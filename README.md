@@ -1,5 +1,7 @@
 # pg-tx
 
+[![npm version](https://badge.fury.io/js/pg-tx.svg)](https://badge.fury.io/js/pg-tx)
+
 This package provides a minimalistic way to implement transactions on top of [node-postgres](http://node-postgres.com), based on [this answer](https://stackoverflow.com/a/65588782/312725), but improved to remove a class of subtle bugs.
 
 ## Usage
