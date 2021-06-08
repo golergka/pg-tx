@@ -4,6 +4,12 @@
 
 This package implements transactions on top of [node-postgres](http://node-postgres.com), based on [this answer](https://stackoverflow.com/a/65588782/312725), but improved to remove a class of subtle bugs.
 
+## Features
+
+* No use-after-release bugs
+* Automatic transactions-inside-transactions with savepoints
+* Can be used with either `Pool` or `PoolClient`
+
 ## Usage
 
 ```Typescript
@@ -95,3 +101,11 @@ await tx(pg, async (db) => {
 ```
 
 To prevent this, we use ProxyClient, which implements a disposable pattern. After the client has been released, any attempts to use it will throw an error.
+
+## Development
+
+To run tests, specify `POSTGRES_URL` in `.env` file like this:
+
+```
+POSTGRES_URL="postgres://postgres:password@127.0.0.1:5432/test-db"
+```
