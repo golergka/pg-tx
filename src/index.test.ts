@@ -1,4 +1,5 @@
 import { Pool, PoolClient } from 'pg'
+import { mock, instance, when, anything, verify } from 'ts-mockito'
 import tx from '.'
 
 function testWithClient<TClient extends Pool | PoolClient>(
@@ -171,5 +172,28 @@ describe(`tx`, () => {
 				await pool.end()
 			}
 		)
+	})
+
+	it.concurrent(`handles error thrown on commit gracefully`, async () => {
+		const clientMock = mock<PoolClient>()
+		const exampleQuery = `SELECT 1`
+
+		when( clientMock.query( `SELECT txid_current() AS "txid"`))
+			.thenResolve({ rows: [{ txid: '1' }] } as any)
+			.thenResolve({ rows: [{ txid: '2' }] } as any)
+		when(clientMock.query(`COMMIT`)).thenReject(new Error(`db error`))
+		when(clientMock.query(`ROLLBACK`)).thenResolve()
+
+		const client = instance(clientMock)
+
+		await expect(
+			tx(client, async (db) => {
+				await db.query(exampleQuery)
+			})
+		).rejects.toThrowError(`db error`)
+
+		verify(clientMock.query(exampleQuery, anything(), anything())).called()
+		verify(clientMock.query(`COMMIT`)).called()
+		verify(clientMock.query(`ROLLBACK`)).never()
 	})
 })

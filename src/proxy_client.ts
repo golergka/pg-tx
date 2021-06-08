@@ -199,7 +199,6 @@ export class ProxyClient implements PoolClient {
 	}
 
 	proxyRelease() {
-		this.releaseCheck()
 		this.released = true
 	}
 }

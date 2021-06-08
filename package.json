@@ -52,6 +52,7 @@
     "pg-protocol": "^1.5.0",
     "prettier": "^2.2.1",
     "ts-jest": "^26.5.5",
+    "ts-mockito": "^2.6.1",
     "typescript": "^4.2.4"
   },
   "dependencies": {
