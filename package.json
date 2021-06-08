@@ -1,9 +1,19 @@
 {
   "name": "pg-tx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Transaction wrapper for node-postgres",
   "main": ".build/index.js",
   "types": ".build/index.d.ts",
+  "keywords": [
+    "pg",
+    "postgres",
+    "connection",
+    "transaction",
+    "savepoint",
+    "database",
+    "db",
+    "tx"
+  ],
   "scripts": {
     "build": "tsc",
     "lint": "eslint . --ext .ts",
