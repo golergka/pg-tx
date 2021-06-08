@@ -14,10 +14,18 @@ function testWithClient<TClient extends Pool | PoolClient>(
 			id SERIAL PRIMARY KEY,
 			thing TEXT NOT NULL
 		)`)
+
+		// https://dba.stackexchange.com/a/293929/200560
+		await pg.query(`
+			CREATE TABLE test_defer(
+				x int CONSTRAINT test_me UNIQUE DEFERRABLE INITIALLY DEFERRED
+			);
+		`)
 	})
 
 	afterEach(async () => {
 		await pg.query(`DROP TABLE things`)
+		await pg.query(`DROP TABLE test_defer`)
 		await destroyClient(pg)
 	})
 
@@ -134,6 +142,13 @@ function testWithClient<TClient extends Pool | PoolClient>(
 		)
 		expect(rolledbackCount).toBe(0)
 	})
+
+	it(`handles errors thrown on commit gracefully`, async () => {
+		await expect(tx(pg, async (db) => {
+			await expect(db.query(`INSERT INTO test_defer VALUES(1)`)).resolves.toEqual(expect.anything())
+			await expect(db.query(`INSERT INTO test_defer VALUES(1)`)).resolves.toEqual(expect.anything())
+		})).rejects.toThrowError(`duplicate key value violates unique constraint \"test_me\"`)
+	})
 }
 
 describe(`tx`, () => {
@@ -174,7 +189,7 @@ describe(`tx`, () => {
 		)
 	})
 
-	it.concurrent(`handles error thrown on commit gracefully`, async () => {
+	it(`handles error thrown on commit gracefully`, async () => {
 		const clientMock = mock<PoolClient>()
 		const exampleQuery = `SELECT 1`
 
