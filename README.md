@@ -1,6 +1,6 @@
 # pg-tx - Transactions for node-postgres
 
-[![npm version](https://badge.fury.io/js/pg-tx.svg)](https://badge.fury.io/js/pg-tx)
+[![npm version](https://badge.fury.io/js/pg-tx.svg)](https://badge.fury.io/js/pg-tx) [![DeepScan grade](https://deepscan.io/api/teams/14626/projects/17725/branches/413894/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=14626&pid=17725&bid=413894)
 
 This package implements transactions on top of [node-postgres](http://node-postgres.com), based on [this answer](https://stackoverflow.com/a/65588782/312725), but improved to remove a class of subtle bugs.
 
